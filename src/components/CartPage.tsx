@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart, Trash2, Plus, Minus, Calendar as CalendarIcon, MapPin, Truck } from 'lucide-react'
+import { ShoppingCart, Trash2, Plus, Minus, Calendar as CalendarIcon, MapPin, Truck, FileText, Upload, CreditCard, Building, RefreshCw, Quote } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useCart } from '@/context/CartContext'
@@ -36,6 +36,16 @@ interface DeliveryInfo {
   contactName: string
   contactPhone: string
   notes: string
+  // New Cart Upgrade Fields
+  taxExempt: boolean
+  taxExemptCert: string
+  purchaseOrderNumber: string
+  orderType: 'purchase' | 'quote'
+  jobSiteName: string
+  jobSiteAddress: string
+  creditTerms: 'net30' | 'cod' | 'credit-card'
+  isRecurring: boolean
+  recurringFrequency: 'weekly' | 'monthly' | 'quarterly'
 }
 
 export default function CartPage() {
@@ -51,16 +61,28 @@ export default function CartPage() {
     zipCode: '',
     contactName: '',
     contactPhone: '',
-    notes: ''
+    notes: '',
+    // New Cart Upgrade Fields
+    taxExempt: false,
+    taxExemptCert: '',
+    purchaseOrderNumber: '',
+    orderType: 'purchase',
+    jobSiteName: '',
+    jobSiteAddress: '',
+    creditTerms: 'credit-card',
+    isRecurring: false,
+    recurringFrequency: 'monthly'
   })
 
   const [showDeliveryScheduling, setShowDeliveryScheduling] = useState(false)
   const [quantityInputs, setQuantityInputs] = useState<{[key: string]: string}>({})
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const tax = subtotal * 0.08 // 8% tax
+  const recurringDiscount = deliveryInfo.isRecurring ? subtotal * 0.05 : 0 // 5% recurring discount
+  const adjustedSubtotal = subtotal - recurringDiscount
+  const tax = deliveryInfo.taxExempt ? 0 : adjustedSubtotal * 0.08 // No tax if exempt
   const deliveryFee = deliveryInfo.deliveryType === 'airdrop' ? 150.00 : 75.00 // Airdrop costs more
-  const total = subtotal + tax + deliveryFee
+  const total = adjustedSubtotal + tax + deliveryFee
 
   const handleSubmitOrder = () => {
     const orderData = {
@@ -100,7 +122,17 @@ export default function CartPage() {
       zipCode: '',
       contactName: '',
       contactPhone: '',
-      notes: ''
+      notes: '',
+      // Reset cart upgrade fields
+      taxExempt: false,
+      taxExemptCert: '',
+      purchaseOrderNumber: '',
+      orderType: 'purchase',
+      jobSiteName: '',
+      jobSiteAddress: '',
+      creditTerms: 'credit-card',
+      isRecurring: false,
+      recurringFrequency: 'monthly'
     })
   }
 
@@ -130,7 +162,10 @@ export default function CartPage() {
     deliveryInfo.zipCode &&
     deliveryInfo.contactName &&
     deliveryInfo.contactPhone &&
-    (deliveryInfo.deliveryType === 'ground' || deliveryInfo.deliveryTime)
+    (deliveryInfo.deliveryType === 'ground' || deliveryInfo.deliveryTime) &&
+    // Additional validations for cart upgrades
+    (deliveryInfo.creditTerms !== 'net30' || deliveryInfo.orderType === 'quote') && // Net 30 requires quote or approval
+    (!deliveryInfo.taxExempt || deliveryInfo.taxExemptCert) // Tax exempt requires certificate
 
   return (
     <>
@@ -409,6 +444,186 @@ export default function CartPage() {
                         rows={3}
                       />
                     </div>
+
+                    {/* ===== NEW CART UPGRADES ===== */}
+
+                    {/* Business Information Section */}
+                    <div className="border-t pt-6">
+                      <Label className="text-base font-semibold mb-4 block">💼 Business Information</Label>
+
+                      {/* Purchase Order & Job Site */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <Label htmlFor="purchaseOrder">Purchase Order # (Optional)</Label>
+                          <Input
+                            id="purchaseOrder"
+                            placeholder="PO-2024-001"
+                            value={deliveryInfo.purchaseOrderNumber}
+                            onChange={(e) => setDeliveryInfo(prev => ({ ...prev, purchaseOrderNumber: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="jobSiteName">Job Site Name (Optional)</Label>
+                          <Input
+                            id="jobSiteName"
+                            placeholder="Downtown Office Building"
+                            value={deliveryInfo.jobSiteName}
+                            onChange={(e) => setDeliveryInfo(prev => ({ ...prev, jobSiteName: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Job Site Address */}
+                      <div className="mb-4">
+                        <Label htmlFor="jobSiteAddress">Job Site Address (if different)</Label>
+                        <Input
+                          id="jobSiteAddress"
+                          placeholder="123 Construction Ave, Youngstown, OH 44503"
+                          value={deliveryInfo.jobSiteAddress}
+                          onChange={(e) => setDeliveryInfo(prev => ({ ...prev, jobSiteAddress: e.target.value }))}
+                        />
+                      </div>
+
+                      {/* Tax Exemption */}
+                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="taxExempt"
+                            checked={deliveryInfo.taxExempt}
+                            onChange={(e) => setDeliveryInfo(prev => ({ ...prev, taxExempt: e.target.checked }))}
+                            className="rounded"
+                          />
+                          <Label htmlFor="taxExempt" className="font-medium">🏢 Tax Exempt (Contractor/Business)</Label>
+                        </div>
+                        {deliveryInfo.taxExempt && (
+                          <div>
+                            <Label htmlFor="taxCert">Tax Exempt Certificate URL</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="taxCert"
+                                placeholder="Upload certificate or enter URL"
+                                value={deliveryInfo.taxExemptCert}
+                                onChange={(e) => setDeliveryInfo(prev => ({ ...prev, taxExemptCert: e.target.value }))}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => alert('📁 Tax certificate upload would open file picker here')}
+                              >
+                                <Upload className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <p className="text-sm text-yellow-700 mt-1">Upload your valid tax exemption certificate</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Order Type & Payment Terms */}
+                    <div className="border-t pt-6">
+                      <Label className="text-base font-semibold mb-4 block">💳 Order Type & Payment</Label>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        {/* Order Type */}
+                        <div>
+                          <Label>Order Type</Label>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              type="button"
+                              variant={deliveryInfo.orderType === 'purchase' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setDeliveryInfo(prev => ({ ...prev, orderType: 'purchase' }))}
+                              className="flex-1"
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-1" />
+                              Purchase Now
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={deliveryInfo.orderType === 'quote' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setDeliveryInfo(prev => ({ ...prev, orderType: 'quote' }))}
+                              className="flex-1"
+                            >
+                              <Quote className="w-4 h-4 mr-1" />
+                              Request Quote
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Payment Terms */}
+                        <div>
+                          <Label htmlFor="creditTerms">Payment Terms</Label>
+                          <Select
+                            value={deliveryInfo.creditTerms}
+                            onValueChange={(value) => setDeliveryInfo(prev => ({ ...prev, creditTerms: value as any }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="credit-card">Credit Card</SelectItem>
+                              <SelectItem value="cod">Cash on Delivery</SelectItem>
+                              <SelectItem value="net30">Net 30 Terms (Approved Contractors)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Net 30 Notice */}
+                      {deliveryInfo.creditTerms === 'net30' && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                          <p className="text-blue-800">
+                            <strong>Net 30 Terms:</strong> Available for approved contractors with established credit.
+                            <a href="#" className="underline ml-1">Apply for credit account →</a>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recurring Orders */}
+                    <div className="border-t pt-6">
+                      <Label className="text-base font-semibold mb-4 block">🔄 Recurring Orders</Label>
+
+                      <div className="flex items-center space-x-2 mb-3">
+                        <input
+                          type="checkbox"
+                          id="recurring"
+                          checked={deliveryInfo.isRecurring}
+                          onChange={(e) => setDeliveryInfo(prev => ({ ...prev, isRecurring: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="recurring">Set up automatic reordering</Label>
+                      </div>
+
+                      {deliveryInfo.isRecurring && (
+                        <div className="space-y-3">
+                          <div>
+                            <Label htmlFor="frequency">Frequency</Label>
+                            <Select
+                              value={deliveryInfo.recurringFrequency}
+                              onValueChange={(value) => setDeliveryInfo(prev => ({ ...prev, recurringFrequency: value as any }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
+                            <p className="text-green-800">
+                              📦 <strong>Recurring Benefits:</strong> 5% discount on recurring orders, priority scheduling, automatic inventory management.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -426,14 +641,25 @@ export default function CartPage() {
                       <span>Subtotal:</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
+                    {deliveryInfo.isRecurring && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Recurring Discount (5%):</span>
+                        <span>-${recurringDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <span>Tax (8%):</span>
+                      <span>Tax {deliveryInfo.taxExempt ? '(Exempt)' : '(8%)'}:</span>
                       <span>${tax.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Delivery Fee{deliveryInfo.deliveryType ? ` (${deliveryInfo.deliveryType === 'airdrop' ? 'Airdrop' : 'Ground Drop'})` : ''}:</span>
                       <span>${deliveryFee.toFixed(2)}</span>
                     </div>
+                    {deliveryInfo.orderType === 'quote' && (
+                      <div className="p-2 bg-blue-50 text-blue-800 text-xs rounded">
+                        💡 Quote Mode: Final pricing subject to approval
+                      </div>
+                    )}
                     <Separator />
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total:</span>
@@ -469,10 +695,19 @@ export default function CartPage() {
                       <Button
                         onClick={handleSubmitOrder}
                         disabled={!isDeliveryInfoComplete}
-                        className="w-full mbs-red mbs-red-hover"
+                        className={`w-full ${deliveryInfo.orderType === 'quote' ? 'bg-blue-600 hover:bg-blue-700' : 'mbs-red mbs-red-hover'}`}
                       >
-                        <Truck className="w-4 h-4 mr-2" />
-                        Confirm {deliveryInfo.deliveryType === 'airdrop' ? 'Airdrop' : 'Ground Drop'} Order
+                        {deliveryInfo.orderType === 'quote' ? (
+                          <>
+                            <Quote className="w-4 h-4 mr-2" />
+                            Request Quote
+                          </>
+                        ) : (
+                          <>
+                            <Truck className="w-4 h-4 mr-2" />
+                            Confirm {deliveryInfo.deliveryType === 'airdrop' ? 'Airdrop' : 'Ground Drop'} Order
+                          </>
+                        )}
                       </Button>
                     )}
 
