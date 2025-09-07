@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Menu, Instagram, Facebook } from 'lucide-react';
+import { ChevronDown, Menu, Instagram, Facebook, ShoppingCart, User, Star, LogOut, Package, CreditCard, Settings } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import AuthDialog from './AuthDialog';
@@ -14,6 +14,14 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 export default function Header() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -21,6 +29,12 @@ export default function Header() {
   const { items } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  // Helper to get total cart items
+  const getTotalItems = () => {
+    if (!items) return 0;
+    return items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  };
 
   return (
     <>
@@ -51,27 +65,6 @@ export default function Header() {
                 Contact Us
               </Link>
             </div>
-
-            {/* Auth section for B2B functionality - hidden but available */}
-            {!user && (
-              <button
-                onClick={() => setAuthDialogOpen(true)}
-                className="absolute right-4 text-xs text-gray-600 hover:text-black"
-              >
-                Sign In
-              </button>
-            )}
-            {user && (
-              <div className="absolute right-4 flex items-center gap-2">
-                <span className="text-xs text-gray-600">Welcome, {user.email}</span>
-                <button
-                  onClick={logout}
-                  className="text-xs text-gray-600 hover:text-black"
-                >
-                  Sign Out
-                </button>
-              </div>
-            )}
           </div>
         </nav>
 
@@ -209,6 +202,94 @@ export default function Header() {
                   </div>
                 </div>
               </nav>
+
+              {/* Auth Section */}
+              <div className="flex items-center gap-3 mt-4">
+                {/* Cart button with item count */}
+                <Button variant="ghost" size="sm" asChild className="relative">
+                  <Link href="/cart">
+                    <ShoppingCart className="h-4 w-4" />
+                    {getTotalItems() > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0 flex items-center justify-center bg-red-500">
+                        {getTotalItems()}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
+
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span className="hidden md:inline">{user.contactName}</span>
+                        {/* Show loyalty tier badge */}
+                        <Badge className={`text-xs ${
+                          user.loyaltyTier === 'platinum' ? 'bg-purple-500' :
+                          user.loyaltyTier === 'gold' ? 'bg-yellow-500' :
+                          user.loyaltyTier === 'silver' ? 'bg-gray-400' :
+                          'bg-orange-600'
+                        } text-white capitalize`}>
+                          {user.loyaltyTier}
+                        </Badge>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="px-2 py-1.5">
+                        <p className="text-sm font-medium">{user.contactName}</p>
+                        <p className="text-xs text-gray-500">{user.companyName}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          <span className="text-xs text-gray-600">{user.loyaltyPoints?.toLocaleString() ?? 0} points</span>
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/account" className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          My Account
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=orders" className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Order History
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=loyalty" className="flex items-center gap-2">
+                          <Star className="h-4 w-4" />
+                          Loyalty Rewards
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=credit" className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          Credit Account
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/account?tab=settings" className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Account Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={logout} className="text-red-600">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                    onClick={() => setAuthDialogOpen(true)}
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Mobile Menu Button */}
