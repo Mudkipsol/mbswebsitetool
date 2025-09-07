@@ -2,27 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
-  Search,
-  ShoppingCart,
-  Filter,
   ArrowLeft,
-  Lock,
+  ShoppingCart,
+  Search,
+  Package,
+  Eye,
   Edit,
-  Save,
-  X,
-  Upload
+  Lock,
+  Calculator,
+  FileText,
+  Download,
+  AlertTriangle,
+  Filter,
+  Save
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
@@ -545,6 +549,35 @@ const getInitialDirectProducts = () => {
 
 type SortOption = 'sales' | 'price-low' | 'price-high';
 
+// Bulk Pricing Tiers - Buy more, save more!
+const BULK_PRICING = {
+  shingles: [
+    { minQty: 1, discount: 0, label: 'Regular Price' },
+    { minQty: 10, discount: 0.05, label: '5% off 10+ bundles' },
+    { minQty: 25, discount: 0.10, label: '10% off 25+ bundles' },
+    { minQty: 50, discount: 0.15, label: '15% off 50+ bundles' }
+  ],
+  underlayment: [
+    { minQty: 1, discount: 0, label: 'Regular Price' },
+    { minQty: 5, discount: 0.05, label: '5% off 5+ rolls' },
+    { minQty: 15, discount: 0.10, label: '10% off 15+ rolls' }
+  ],
+  'ice-and-water': [
+    { minQty: 1, discount: 0, label: 'Regular Price' },
+    { minQty: 10, discount: 0.08, label: '8% off 10+ rolls' },
+    { minQty: 20, discount: 0.12, label: '12% off 20+ rolls' }
+  ]
+};
+
+// Stock by Location
+const STOCK_LOCATIONS = [
+  { id: 'youngstown', name: 'Youngstown, OH', isMain: true },
+  { id: 'akron', name: 'Akron, OH', isMain: false },
+  { id: 'columbus', name: 'Columbus, OH', isMain: false },
+  { id: 'cleveland', name: 'Cleveland, OH', isMain: false },
+  { id: 'pittsburgh', name: 'Pittsburgh, PA', isMain: false }
+];
+
 export default function InventoryPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -574,6 +607,13 @@ export default function InventoryPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editType, setEditType] = useState<'category' | 'brand' | 'product' | 'directProduct'>('category');
   const [editItem, setEditItem] = useState<any>(null);
+
+  // Material Calculator states
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [roofArea, setRoofArea] = useState('');
+  const [roofPitch, setRoofPitch] = useState('4/12');
+  const [wasteFactorPercent, setWasteFactorPercent] = useState('10');
+  const [calculatorResults, setCalculatorResults] = useState<any>(null);
 
   // Save data to localStorage
   const saveToLocalStorage = () => {
@@ -759,6 +799,70 @@ export default function InventoryPage() {
     return breadcrumbs;
   };
 
+  // Material Calculator Functions
+  const calculateMaterials = () => {
+    const area = parseFloat(roofArea);
+    const waste = parseFloat(wasteFactorPercent) / 100;
+
+    if (!area || area <= 0) {
+      alert('Please enter a valid roof area');
+      return;
+    }
+
+    // Pitch factor calculation (approximate)
+    const pitchFactors = {
+      '3/12': 1.03, '4/12': 1.06, '5/12': 1.08, '6/12': 1.12,
+      '7/12': 1.16, '8/12': 1.20, '9/12': 1.25, '10/12': 1.30,
+      '11/12': 1.36, '12/12': 1.41
+    };
+    const pitchFactor = pitchFactors[roofPitch as keyof typeof pitchFactors] || 1.06;
+
+    // Calculate adjusted area
+    const adjustedArea = area * pitchFactor;
+    const areaWithWaste = adjustedArea * (1 + waste);
+
+    // Shingles (3 bundles per 100 sq ft typically)
+    const shinglesNeeded = Math.ceil((areaWithWaste / 100) * 3);
+
+    // Underlayment (typically covers 400-1000 sq ft per roll)
+    const underlaymentNeeded = Math.ceil(areaWithWaste / 400);
+
+    // Ice & Water Shield (for eaves, typically 2 rows = 6 ft height)
+    const iceWaterNeeded = Math.ceil((areaWithWaste * 0.1) / 200); // 10% coverage estimate
+
+    setCalculatorResults({
+      originalArea: area,
+      adjustedArea: Math.round(adjustedArea),
+      wasteFactorUsed: waste * 100,
+      pitchFactor,
+      materials: {
+        shingles: { quantity: shinglesNeeded, unit: 'bundles', coverage: '~33 sq ft each' },
+        underlayment: { quantity: underlaymentNeeded, unit: 'rolls', coverage: '~400 sq ft each' },
+        iceWater: { quantity: iceWaterNeeded, unit: 'rolls', coverage: '~200 sq ft each' }
+      }
+    });
+  };
+
+  // Get bulk pricing discount
+  const getBulkDiscount = (category: string, quantity: number) => {
+    const categoryPricing = BULK_PRICING[category as keyof typeof BULK_PRICING];
+    if (!categoryPricing) return { discount: 0, label: 'Regular Price' };
+
+    let bestTier = categoryPricing[0];
+    for (const tier of categoryPricing) {
+      if (quantity >= tier.minQty) {
+        bestTier = tier;
+      }
+    }
+    return bestTier;
+  };
+
+  // Calculate price with bulk discount
+  const calculateBulkPrice = (basePrice: number, category: string, quantity: number) => {
+    const bulkTier = getBulkDiscount(category, quantity);
+    return basePrice * (1 - bulkTier.discount);
+  };
+
   return (
     <>
       <Header />
@@ -805,6 +909,110 @@ export default function InventoryPage() {
                   Exit Edit Mode
                 </Button>
               )}
+
+              {/* Material Calculator Button */}
+              <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200"
+                  >
+                    <Calculator className="w-4 h-4 mr-1" />
+                    Calculator
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Material Calculator</DialogTitle>
+                    <DialogDescription>
+                      Calculate how much material you need for your roofing project
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="roof-area">Roof Area (sq ft)</Label>
+                        <Input
+                          id="roof-area"
+                          type="number"
+                          placeholder="e.g., 2400"
+                          value={roofArea}
+                          onChange={(e) => setRoofArea(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="roof-pitch">Roof Pitch</Label>
+                        <Select value={roofPitch} onValueChange={setRoofPitch}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3/12">3/12 (Low Slope)</SelectItem>
+                            <SelectItem value="4/12">4/12 (Standard)</SelectItem>
+                            <SelectItem value="5/12">5/12</SelectItem>
+                            <SelectItem value="6/12">6/12</SelectItem>
+                            <SelectItem value="7/12">7/12</SelectItem>
+                            <SelectItem value="8/12">8/12 (Steep)</SelectItem>
+                            <SelectItem value="9/12">9/12</SelectItem>
+                            <SelectItem value="10/12">10/12</SelectItem>
+                            <SelectItem value="11/12">11/12</SelectItem>
+                            <SelectItem value="12/12">12/12 (Very Steep)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="waste-factor">Waste Factor (%)</Label>
+                        <Select value={wasteFactorPercent} onValueChange={setWasteFactorPercent}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5% (Simple roof)</SelectItem>
+                            <SelectItem value="10">10% (Standard)</SelectItem>
+                            <SelectItem value="15">15% (Complex roof)</SelectItem>
+                            <SelectItem value="20">20% (Very complex)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button onClick={calculateMaterials} className="w-full">
+                      Calculate Materials
+                    </Button>
+
+                    {calculatorResults && (
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-3">Material Requirements</h3>
+                        <div className="space-y-2 text-sm">
+                          <p><strong>Original Area:</strong> {calculatorResults.originalArea} sq ft</p>
+                          <p><strong>Adjusted for Pitch:</strong> {calculatorResults.adjustedArea} sq ft</p>
+                          <p><strong>Waste Factor:</strong> {calculatorResults.wasteFactorUsed}%</p>
+                        </div>
+                        <Separator className="my-4" />
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Shingles:</span>
+                            <span>{calculatorResults.materials.shingles.quantity} {calculatorResults.materials.shingles.unit}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Underlayment:</span>
+                            <span>{calculatorResults.materials.underlayment.quantity} {calculatorResults.materials.underlayment.unit}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Ice & Water Shield:</span>
+                            <span>{calculatorResults.materials.iceWater.quantity} {calculatorResults.materials.iceWater.unit}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-50 rounded text-sm">
+                          <p className="text-blue-800">💡 <strong>Tip:</strong> These are estimated quantities. Consult with our experts for complex roofing projects.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               {/* View Cart Button */}
               <Button
@@ -1013,6 +1221,40 @@ export default function InventoryPage() {
                       <CardContent className="p-4">
                         <h3 className="font-bold text-lg mb-2">{product.name}</h3>
                         <p className="text-gray-600 mb-3">Starting at ${product.startingPrice}</p>
+
+                        {/* Product Docs & Guides */}
+                        <div className="flex gap-2 mb-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Simulate PDF download
+                              const link = document.createElement('a');
+                              link.href = '#';
+                              link.download = `${product.name}-specs.pdf`;
+                              alert(`📄 Downloading: ${product.name} Technical Specifications`);
+                            }}
+                            className="text-xs"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Specs
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Simulate PDF download
+                              alert(`📋 Downloading: ${product.name} Installation Guide`);
+                            }}
+                            className="text-xs"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Install Guide
+                          </Button>
+                        </div>
+
                         <Button
                           className="w-full"
                           onClick={() => navigateToProduct(product.id)}
@@ -1070,6 +1312,26 @@ export default function InventoryPage() {
                               />
                             </div>
                           </div>
+                          {/* Bulk Pricing Display */}
+                          {currentCategory && BULK_PRICING[currentCategory as keyof typeof BULK_PRICING] && (
+                            <div className="mt-3">
+                              <Label className="text-sm font-medium mb-2 block">💰 Bulk Pricing:</Label>
+                              <div className="space-y-1">
+                                {BULK_PRICING[currentCategory as keyof typeof BULK_PRICING]?.map((tier, index) => {
+                                  const currentQty = quantities[selectedColor] || 0.1;
+                                  const isActive = currentQty >= tier.minQty;
+                                  const colorData = (currentView.data as { id: string; name: string; hex: string; price: number; stock: number }[]).find(c => c.id === selectedColor);
+                                  const discountedPrice = colorData ? calculateBulkPrice(colorData.price, currentCategory, currentQty) : 0;
+
+                                  return (
+                                    <div key={index} className={`text-xs p-2 rounded ${isActive ? 'bg-green-100 text-green-800 font-medium' : 'bg-gray-50 text-gray-600'}`}>
+                                      {tier.label} {isActive && colorData && `(${discountedPrice.toFixed(2)} each)`}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <Button
                           className="bg-red-500 hover:bg-red-600"
@@ -1111,6 +1373,18 @@ export default function InventoryPage() {
                         <Badge className={`absolute top-2 left-2 ${getStockBadgeColor(product.stock)} text-white`}>
                           {getStockText(product.stock)}
                         </Badge>
+                        {/* Stock by Location - show on hover or click */}
+                        <div className="absolute top-2 right-16 opacity-0 hover:opacity-100 transition-opacity bg-white rounded shadow-lg p-2 text-xs">
+                          <div className="space-y-1">
+                            {STOCK_LOCATIONS.slice(0, 3).map((location) => (
+                              <div key={location.id} className="flex justify-between">
+                                <span>{location.name}:</span>
+                                <span className="font-medium">{Math.floor(Math.random() * 200)}</span>
+                              </div>
+                            ))}
+                            <div className="text-blue-600 cursor-pointer">View all locations →</div>
+                          </div>
+                        </div>
                         {editMode && (
                           <Button
                             onClick={(e) => {
@@ -1142,6 +1416,22 @@ export default function InventoryPage() {
                                 className="w-20 h-8 text-center"
                               />
                             </div>
+                            {/* Bulk Pricing for Direct Products */}
+                            {currentCategory && BULK_PRICING[currentCategory as keyof typeof BULK_PRICING] && (
+                              <div className="space-y-1">
+                                {BULK_PRICING[currentCategory as keyof typeof BULK_PRICING]?.map((tier, index) => {
+                                  const currentQty = quantities[product.id] || 0.1;
+                                  const isActive = currentQty >= tier.minQty;
+                                  const discountedPrice = calculateBulkPrice(product.price, currentCategory, currentQty);
+
+                                  return (
+                                    <div key={index} className={`text-xs p-1 rounded ${isActive ? 'bg-green-100 text-green-800 font-medium' : 'bg-gray-50 text-gray-600'}`}>
+                                      {tier.label} {isActive && `(${discountedPrice.toFixed(2)} each)`}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                             <Button
                               onClick={() => handleAddToCart(product)}
                               className="w-full bg-red-500 hover:bg-red-600"
@@ -1151,9 +1441,24 @@ export default function InventoryPage() {
                             </Button>
                           </div>
                         ) : (
-                          <Button disabled className="w-full">
-                            Out of Stock
-                          </Button>
+                          <div className="space-y-2">
+                            <Button disabled className="w-full">
+                              Out of Stock
+                            </Button>
+                            {/* Product Substitution Alert */}
+                            <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                              <div className="flex items-start gap-2">
+                                <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="font-medium text-yellow-800">Similar Product Available</p>
+                                  <p className="text-yellow-700">Try our premium alternative with similar specs</p>
+                                  <Button variant="link" className="h-auto p-0 text-yellow-700 underline text-xs">
+                                    View Alternative →
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
