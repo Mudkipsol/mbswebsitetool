@@ -28,6 +28,13 @@ import {
   BarChart3,
   Settings,
   Image as ImageIcon,
+  CreditCard,
+  PieChart,
+  Calendar,
+  Bell,
+  Truck,
+  Target,
+  Mail,
   Lock,
   Upload,
   Download,
@@ -35,7 +42,6 @@ import {
   ScanLine,
   Building2,
   TrendingDown,
-  Calendar,
   Activity
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -920,16 +926,19 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs defaultValue="categories" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-9">
+            <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 text-xs">
               <TabsTrigger value="categories">Products</TabsTrigger>
-              <TabsTrigger value="import-export">Import/Export</TabsTrigger>
-              <TabsTrigger value="barcode">Barcode</TabsTrigger>
-              <TabsTrigger value="supplier">Supplier Portal</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="customers">Customers</TabsTrigger>
+              <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
+              <TabsTrigger value="pricing">Pricing</TabsTrigger>
+              <TabsTrigger value="alerts">Alerts</TabsTrigger>
+              <TabsTrigger value="tracking">Tracking</TabsTrigger>
               <TabsTrigger value="willcall">Will Call</TabsTrigger>
               <TabsTrigger value="counter">Counter</TabsTrigger>
               <TabsTrigger value="returns">Returns</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
             <TabsContent value="categories" className="space-y-4">
@@ -2090,6 +2099,452 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* === NEW ADMIN PRO FEATURES === */}
+
+            {/* Customer Credit Management */}
+            <TabsContent value="customers" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Customer Credit Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">ABC Roofing LLC</p>
+                          <p className="text-sm text-gray-600">Credit Limit: $25,000</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-green-600">$18,500 Available</p>
+                          <p className="text-sm text-gray-600">$6,500 Used</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">Premier Construction</p>
+                          <p className="text-sm text-gray-600">Credit Limit: $50,000</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-yellow-600">$5,200 Available</p>
+                          <p className="text-sm text-gray-600">$44,800 Used</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div>
+                          <p className="font-medium">Sunshine Roofing</p>
+                          <p className="text-sm text-gray-600">Credit Limit: $15,000</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-red-600">$0 Available</p>
+                          <p className="text-sm text-gray-600">$15,000 Used - OVERLIMIT</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button className="w-full">Manage Customer Credit</Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Credit Applications</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="p-3 border rounded">
+                        <p className="font-medium">Elite Contractors Inc.</p>
+                        <p className="text-sm text-gray-600">Requested: $30,000 | Applied: 2 days ago</p>
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" className="bg-green-600">Approve</Button>
+                          <Button size="sm" variant="outline">Review</Button>
+                        </div>
+                      </div>
+                      <div className="p-3 border rounded">
+                        <p className="font-medium">Metro Roofing Solutions</p>
+                        <p className="text-sm text-gray-600">Requested: $20,000 | Applied: 5 days ago</p>
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" className="bg-green-600">Approve</Button>
+                          <Button size="sm" variant="outline">Review</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Sales Analytics */}
+            <TabsContent value="analytics" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChart className="h-5 w-5" />
+                      Top Products (30 Days)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Architectural Shingles</span>
+                        <span className="font-medium">$89,500</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Ice & Water Shield</span>
+                        <span className="font-medium">$45,200</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Underlayment</span>
+                        <span className="font-medium">$32,100</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Ridge Vents</span>
+                        <span className="font-medium">$18,900</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Top Customers
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">ABC Roofing LLC</span>
+                        <span className="font-medium">$125,400</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Premier Construction</span>
+                        <span className="font-medium">$98,200</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Elite Contractors</span>
+                        <span className="font-medium">$76,800</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Metro Roofing</span>
+                        <span className="font-medium">$54,300</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Profit Margins
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Shingles</span>
+                        <span className="font-medium text-green-600">34%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Underlayment</span>
+                        <span className="font-medium text-green-600">42%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Ice & Water</span>
+                        <span className="font-medium text-yellow-600">28%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Metal Roofing</span>
+                        <span className="font-medium text-red-600">18%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Inventory Forecasting */}
+            <TabsContent value="forecasting" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Inventory Forecasting & Predictions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Products Running Low</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-red-50 border border-red-200 rounded">
+                          <p className="font-medium text-red-800">Architectural Shingles - Charcoal</p>
+                          <p className="text-sm text-red-600">Current: 25 bundles | Will run out in 8 days</p>
+                          <p className="text-xs text-red-500">Recommended reorder: 200 bundles</p>
+                        </div>
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                          <p className="font-medium text-yellow-800">Ice & Water Shield</p>
+                          <p className="text-sm text-yellow-600">Current: 75 rolls | Will run out in 2 weeks</p>
+                          <p className="text-xs text-yellow-500">Recommended reorder: 150 rolls</p>
+                        </div>
+                        <div className="p-3 bg-orange-50 border border-orange-200 rounded">
+                          <p className="font-medium text-orange-800">Synthetic Underlayment</p>
+                          <p className="text-sm text-orange-600">Current: 120 rolls | Will run out in 3 weeks</p>
+                          <p className="text-xs text-orange-500">Recommended reorder: 100 rolls</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-3">Seasonal Demand Forecast</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-blue-50 rounded">
+                          <p className="font-medium">Spring Season (Mar-May)</p>
+                          <p className="text-sm text-gray-600">Expected 40% increase in shingle demand</p>
+                          <p className="text-xs text-blue-600">Suggested inventory boost: +60%</p>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded">
+                          <p className="font-medium">Summer Peak (Jun-Aug)</p>
+                          <p className="text-sm text-gray-600">Peak season - all categories high demand</p>
+                          <p className="text-xs text-green-600">Stock levels: Optimal</p>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded">
+                          <p className="font-medium">Fall Rush (Sep-Nov)</p>
+                          <p className="text-sm text-gray-600">Pre-winter repairs spike expected</p>
+                          <p className="text-xs text-purple-600">Focus: Ice & water protection products</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Custom Pricing */}
+            <TabsContent value="pricing" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Custom Contractor Pricing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Pricing Tiers</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 border rounded">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Tier 1 - Premium Contractors</span>
+                            <span className="bg-gold text-black px-2 py-1 rounded text-xs">25% Discount</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">ABC Roofing, Premier Construction</p>
+                        </div>
+                        <div className="p-3 border rounded">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Tier 2 - Regular Contractors</span>
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">15% Discount</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">Elite Contractors, Metro Roofing</p>
+                        </div>
+                        <div className="p-3 border rounded">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Tier 3 - Standard Contractors</span>
+                            <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">10% Discount</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">Sunshine Roofing, City Builders</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-3">Special Product Pricing</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-green-50 rounded">
+                          <p className="font-medium">Volume Discounts Active</p>
+                          <p className="text-sm text-gray-600">Shingles: 50+ bundles = Extra 5% off</p>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded">
+                          <p className="font-medium">Seasonal Promotions</p>
+                          <p className="text-sm text-gray-600">Underlayment: Spring special 20% off</p>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded">
+                          <p className="font-medium">Loyalty Program</p>
+                          <p className="text-sm text-gray-600">Repeat customers: Additional 3% discount</p>
+                        </div>
+                      </div>
+                      <Button className="w-full mt-4">Manage Pricing Rules</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Low Stock Alerts */}
+            <TabsContent value="alerts" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Low Stock Alerts & Notifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-3">Active Alerts</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-red-50 border-l-4 border-red-500">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-red-500" />
+                            <span className="font-medium text-red-800">CRITICAL</span>
+                          </div>
+                          <p className="text-sm mt-1">Architectural Shingles - Weathered Wood</p>
+                          <p className="text-xs text-red-600">Only 5 bundles remaining!</p>
+                        </div>
+                        <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-yellow-500" />
+                            <span className="font-medium text-yellow-800">WARNING</span>
+                          </div>
+                          <p className="text-sm mt-1">Ice & Water Shield - Standard</p>
+                          <p className="text-xs text-yellow-600">Below reorder threshold (25 rolls)</p>
+                        </div>
+                        <div className="p-3 bg-orange-50 border-l-4 border-orange-500">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-orange-500" />
+                            <span className="font-medium text-orange-800">NOTICE</span>
+                          </div>
+                          <p className="text-sm mt-1">Ridge Vent - Black</p>
+                          <p className="text-xs text-orange-600">Approaching reorder point (15 pieces)</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-3">Email Notifications</h3>
+                      <div className="space-y-3">
+                        <div className="p-3 border rounded">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span className="font-medium">Daily Stock Report</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Sent every morning at 8:00 AM</p>
+                          <p className="text-xs text-green-600">✓ Active - Last sent today</p>
+                        </div>
+                        <div className="p-3 border rounded">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span className="font-medium">Critical Alerts</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Immediate notifications for stock-outs</p>
+                          <p className="text-xs text-green-600">✓ Active - 3 alerts sent this week</p>
+                        </div>
+                        <div className="p-3 border rounded">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            <span className="font-medium">Weekly Summary</span>
+                          </div>
+                          <p className="text-sm text-gray-600">Comprehensive inventory report</p>
+                          <p className="text-xs text-green-600">✓ Active - Sent every Friday</p>
+                        </div>
+                      </div>
+                      <Button className="w-full mt-4">Configure Alerts</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Order Tracking */}
+            <TabsContent value="tracking" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Truck className="h-5 w-5" />
+                    Real-Time Order Tracking
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Order #MBS-2024-001</p>
+                          <p className="text-sm text-gray-600">ABC Roofing LLC - $2,450.00</p>
+                        </div>
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">IN TRANSIT</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Order Confirmed - Yesterday 2:30 PM</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Picked & Packed - Today 8:15 AM</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Out for Delivery - Today 11:00 AM</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                          <span>Delivered - ETA 2:00 PM</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Order #MBS-2024-002</p>
+                          <p className="text-sm text-gray-600">Premier Construction - $5,680.00</p>
+                        </div>
+                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">PREPARING</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Order Confirmed - Today 9:45 AM</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          <span>Picking in Progress - Started 10:30 AM</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                          <span>Ready for Delivery - ETA 3:00 PM</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Order #MBS-2024-003</p>
+                          <p className="text-sm text-gray-600">Elite Contractors - $3,290.00</p>
+                        </div>
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">DELIVERED</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Delivered Successfully - Yesterday 3:45 PM</span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Signed by: Mike Johnson
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
