@@ -18,7 +18,9 @@ import {
   Download,
   AlertTriangle,
   Filter,
-  Save
+  Save,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -1088,91 +1090,128 @@ export default function InventoryPage() {
               {/* Colors/Variants View */}
               {currentView.type === 'colors' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {(currentView.data as { id: string; name: string; hex: string; price: number; stock: number }[]).map((color) => (
-                      <Card
-                        key={color.id}
-                        className={`cursor-pointer transition-all ${
-                          selectedColor === color.id ? 'ring-2 ring-red-500' : ''
-                        }`}
-                        onClick={() => setSelectedColor(color.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div
-                            className="w-full h-16 rounded mb-3"
-                            style={{ backgroundColor: color.hex }}
-                          />
-                          <h4 className="font-semibold text-sm">{color.name}</h4>
-                          <p className="text-gray-600 text-sm">${color.price}</p>
-                          <Badge className={getStockBadgeColor(color.stock)}>
-                            {getStockText(color.stock)}
-                          </Badge>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {(currentView.data as { id: string; name: string; hex: string; price: number; stock: number }[]).map((color) => {
+                      const product = products[currentBrand as keyof typeof products]?.[currentCategory as keyof typeof products[keyof typeof products]]?.find((p: { id: string; name: string }) => p.id === currentProduct);
+                      const brand = brands[currentCategory as keyof typeof brands]?.find((b: any) => b.id === currentBrand);
 
-                  {selectedColor && (
-                    <Card className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold mb-2">Add to Cart</h3>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <Label className="text-sm">Quantity:</Label>
-                              <Input
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={quantities[selectedColor] || 1}
-                                onChange={(e) => handleQuantityChange(selectedColor, e.target.value)}
-                                className="w-20 h-8 text-center"
+                      return (
+                        <Card key={color.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                          <div className="relative h-48 bg-gray-200">
+                            {product?.image ? (
+                              <Image
+                                src={product.image}
+                                alt={`${product.name} - ${color.name}`}
+                                fill
+                                className="object-cover"
                               />
-                            </div>
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <Package className="w-16 h-16 text-gray-400" />
+                              </div>
+                            )}
+                            <Badge className={`absolute top-2 left-2 ${getStockBadgeColor(color.stock)} text-white`}>
+                              {getStockText(color.stock)}
+                            </Badge>
+                            {/* Color indicator */}
+                            <div
+                              className="absolute top-2 right-2 w-6 h-6 rounded border-2 border-white shadow-lg"
+                              style={{ backgroundColor: color.hex }}
+                            />
                           </div>
-                          {/* Bulk Pricing Display */}
-                          {currentCategory && BULK_PRICING[currentCategory as keyof typeof BULK_PRICING] && (
-                            <div className="mt-3">
-                              <Label className="text-sm font-medium mb-2 block">💰 Bulk Pricing:</Label>
-                              <div className="space-y-1">
-                                {BULK_PRICING[currentCategory as keyof typeof BULK_PRICING]?.map((tier, index) => {
-                                  const currentQty = quantities[selectedColor] || 1;
-                                  const isActive = currentQty >= tier.minQty;
-                                  const colorData = (currentView.data as { id: string; name: string; hex: string; price: number; stock: number }[]).find(c => c.id === selectedColor);
-                                  const discountedPrice = colorData ? calculateBulkPrice(colorData.price, currentCategory, currentQty) : 0;
 
-                                  return (
-                                    <div key={index} className={`text-xs p-2 rounded ${isActive ? 'bg-green-100 text-green-800 font-medium' : 'bg-gray-50 text-gray-600'}`}>
-                                      {tier.label} {isActive && colorData && `(${discountedPrice.toFixed(2)} each)`}
-                                    </div>
-                                  );
-                                })}
+                          <CardContent className="p-6">
+                            <div className="mb-4">
+                              <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                                {product?.name} - {color.name}
+                              </h3>
+                              <p className="text-sm text-gray-600 mb-2">{brand?.name}</p>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Certainteed {product?.name} Architectural Shingle
+                              </p>
+                              <p className="text-xs text-gray-500 mb-4">
+                                SKU: {product?.id?.toUpperCase()}-{color.id.toUpperCase()}
+                              </p>
+                            </div>
+
+                            <div className="mb-4">
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-bold text-gray-900">
+                                  ${color.price}
+                                </span>
+                                <span className="text-sm text-gray-600">/ Square</span>
                               </div>
                             </div>
-                          )}
-                        </div>
-                        <Button
-                          className="bg-red-500 hover:bg-red-600"
-                          onClick={() => {
-                            const colorData = (currentView.data as { id: string; name: string; hex: string; price: number; stock: number }[]).find(c => c.id === selectedColor);
-                            const product = products[currentBrand as keyof typeof products]?.[currentCategory as keyof typeof products[keyof typeof products]]?.find((p: { id: string; name: string }) => p.id === currentProduct);
 
-                            if (colorData && product) {
-                              handleAddToCart({
-                                id: `${currentProduct}-${selectedColor}`,
-                                name: `${product.name} - ${colorData.name}`,
-                                price: colorData.price,
-                                image: product.image
-                              });
-                            }
-                          }}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Add to Cart
-                        </Button>
-                      </div>
-                    </Card>
-                  )}
+                            <div className="space-y-3 mb-4">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Qty:</span>
+                                <div className="flex items-center">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleQuantityChange(color.id, String(Math.max(1, (quantities[color.id] || 1) - 1)))}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </Button>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={quantities[color.id] || 1}
+                                    onChange={(e) => handleQuantityChange(color.id, e.target.value)}
+                                    className="w-16 h-8 text-center mx-1"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleQuantityChange(color.id, String((quantities[color.id] || 1) + 1))}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => {
+                                  // Simulate view details
+                                  alert(`📋 Viewing details for ${product?.name} - ${color.name}`);
+                                }}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </Button>
+                              <Button
+                                className="flex-1 bg-red-500 hover:bg-red-600"
+                                disabled={color.stock === 0}
+                                onClick={() => {
+                                  if (product) {
+                                    handleAddToCart({
+                                      id: `${currentProduct}-${color.id}`,
+                                      name: `${product.name} - ${color.name}`,
+                                      price: color.price,
+                                      image: product.image
+                                    });
+                                  }
+                                }}
+                              >
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+
                 </div>
               )}
 
